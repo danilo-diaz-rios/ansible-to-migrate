@@ -1,33 +1,54 @@
 ---
 # This playbook will install mysql and create db user and give permissions.
 
+- name: password root MySQL
+  debconf:
+   name: mysql-server
+   question: mysql-server/root_password
+   value: "danilo20"
+   vtype: password
+
+- name: confirm password root MySQL
+  debconf:
+   name: mysql-server
+   question: mysql-server/root_password_again
+   value: "danilo20"
+   vtype: password
+
 - name: Install Mysql package
-  yum: name={{ item }} state=installed
+  apt: name={{ item }} state=installed
   with_items:
    - mysql-server
-   - MySQL-python
-   - libselinux-python
-   - libsemanage-python
+   - python-mysqldb
 
-- name: Configure SELinux to start mysql on any port
-  seboolean: name=mysql_connect_any state=true persistent=yes
-  when: sestatus.rc != 0
+- name: MySQL configuration file
+  template:
+    src: mysqld.cnf.j2
+    dest: /etc/mysql/mysql.conf.d/mysqld.cnf
+    owner: root
+    group: root
+    mode: 0644
+    notify:
+      -restart mysql
 
-- name: Create Mysql configuration file
-  template: src=my.cnf.j2 dest=/etc/my.cnf
-  notify:
-  - restart mysql
-
-- name: Start Mysql Service
-  service: name=mysqld state=started enabled=yes
-
-- name: insert iptables rule
-  lineinfile: dest=/etc/sysconfig/iptables state=present regexp="{{ mysql_port }}"
-              insertafter="^:OUTPUT " line="-A INPUT -p tcp  --dport {{ mysql_port }} -j  ACCEPT"
-  notify: restart iptables
+- name: Started Mysql service
+  command: service mysql start
+  register: start
 
 - name: Create Application Database
-  mysql_db: name={{ dbname }} state=present
+  mysql_db:
+    login_user: root
+    login_password: danilo20
+    name: "{{ dbname }}"
+    state: present
+
 
 - name: Create Application DB User
-  mysql_user: name={{ dbuser }} password={{ upassword }} priv=*.*:ALL host='%' state=present
+  mysql_user:
+    login_user: root
+    login_password: danilo20
+    name: "{{ dbuser }}"
+    password: "{{ upassword }}"
+    priv: "*.*:ALL"
+    host: '%'
+    state: present

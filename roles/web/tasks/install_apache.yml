@@ -1,0 +1,29 @@
+---
+# These tasks install http and the php modules.
+
+- name: install PHP and required modules
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - php7.0-json
+    - php7.0-mbstring
+    - php7.0-intl
+    - php7.0-xml
+    - php7.0-mysql
+    - libapache2-mod-php7.0
+    - git
+
+
+- name: install Apache
+  apt:
+    name: apache2
+    state: present
+
+
+- name: started service Apache
+  service:
+    name: apache2
+    state: started
+    enabled: yes

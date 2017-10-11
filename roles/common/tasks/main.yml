@@ -13,8 +13,3 @@
 - name: Start the ntp service
   service: name=ntpd state=started enabled=yes
   tags: ntp
-
-- name: test to see if selinux is running
-  command: getenforce
-  register: sestatus
-  changed_when: false
