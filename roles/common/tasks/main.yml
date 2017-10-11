@@ -2,7 +2,7 @@
 # This playbook contains common plays that will be run on all nodes.
 
 - name: Install ntp
-  yum: name=ntp state=present
+  apt: name=ntp state=present
   tags: ntp
 
 - name: Configure ntp file
